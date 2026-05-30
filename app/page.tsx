@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { getWhatsAppLink, WHATSAPP_NUMBER } from '@/lib/data'
-import { createSupabaseServer } from '@/lib/supabase-server'
+import { createClient } from '@supabase/supabase-js'
 
 const categoryEmojis: Record<string, string> = {
   'casual-shoes': '👟',
@@ -23,8 +23,11 @@ const dummyProducts = [
 ]
 
 export default async function HomePage() {
-  const supabase = await createSupabaseServer()
-  const { data: categories } = await supabase.from('categories').select('*')
+ const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
+const { data: categories } = await supabase.from('categories').select('*')
   return (
     <div className="pb-20 bg-[#FAF5EF]">
 

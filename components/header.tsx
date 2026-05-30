@@ -115,39 +115,47 @@ export function Header() {
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border shadow-lg md:hidden">
-        <div className="flex items-center justify-around h-16">
-          <Link href="/shop" className="flex flex-col items-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
-            <ShoppingBag className="w-5 h-5" />
-            <span>Category</span>
-          </Link>
-          <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank"
-            className="flex flex-col items-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
-            <MessageCircle className="w-5 h-5" />
-            <span>Message</span>
-          </a>
-          <Link href="/" className="flex flex-col items-center gap-1 text-xs">
-            <div className="bg-primary text-white rounded-full p-3 -mt-6 shadow-lg">
-              <Home className="w-5 h-5" />
-            </div>
-            <span className="text-xs text-foreground/60">Home</span>
-          </Link>
-          <Link href="/cart" className="flex flex-col items-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
-            <ShoppingCart className="w-5 h-5" />
-            <span>Cart</span>
-          </Link>
-          {user ? (
-            <Link href="/profile" className="flex flex-col items-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
-              <UserCircle className="w-5 h-5" />
-              <span>Profile</span>
-            </Link>
-          ) : (
-            <Link href="/auth/login" className="flex flex-col items-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
-              <LogIn className="w-5 h-5" />
-              <span>Login</span>
-            </Link>
-          )}
+  
+  <div className="grid grid-cols-5 h-16 items-center">
+    <Link href="/shop" className="flex flex-col items-center justify-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
+      <ShoppingBag className="w-5 h-5" />
+      <span>Shop</span>
+    </Link>
+    
+    <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer"
+      className="flex flex-col items-center justify-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
+      <MessageCircle className="w-5 h-5" />
+      <span>Message</span>
+    </a>
+    
+    <Link href="/" className="flex flex-col items-center justify-center text-xs relative">
+      {/* Absolute positioning wrapper keeps the layout box intact while allowing the button to float up */}
+      <div className="absolute -top-10 flex flex-col items-center">
+        <div className="bg-primary text-white rounded-full p-3 shadow-lg">
+          <Home className="w-5 h-5" />
         </div>
-      </nav>
+        <span className="text-xs text-foreground/60 mt-1">Home</span>
+      </div>
+    </Link>
+    
+    <Link href="/cart" className="flex flex-col items-center justify-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
+      <ShoppingCart className="w-5 h-5" />
+      <span>Cart</span>
+    </Link>
+    
+    {user ? (
+      <Link href="/profile" className="flex flex-col items-center justify-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
+        <UserCircle className="w-5 h-5" />
+        <span>Profile</span>
+      </Link>
+    ) : (
+      <Link href="/auth/login" className="flex flex-col items-center justify-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
+        <LogIn className="w-5 h-5" />
+        <span>Login</span>
+      </Link>
+    )}
+  </div>
+</nav>
     </>
   )
 }

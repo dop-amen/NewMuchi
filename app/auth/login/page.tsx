@@ -12,17 +12,27 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function handleLogin() {
-    setLoading(true)
-    setError('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
-      router.push('/')
-    }
+async function handleLogin() {
+  setLoading(true)
+  setError('')
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) {
+    setError(error.message)
+    setLoading(false)
+  } else {
+    await supabase.auth.setSession({
+      access_token: data.session!.access_token,
+      refresh_token: data.session!.refresh_token,
+    })
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', data.user!.id)
+      .single()
+    console.log('profileData:', profileData, 'profileError:', profileError)
+    router.push(profileData?.is_admin ? '/admin' : '/')
   }
+}
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FAF5EF]">
