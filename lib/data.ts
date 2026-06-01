@@ -143,7 +143,7 @@ export const reviews: Review[] = [
   },
 ]
 
-export const WHATSAPP_NUMBER = '01969592755'
+export const WHATSAPP_NUMBER = '+8801969592755'
 
 export function getWhatsAppLink(message: string): string {
   const encodedMessage = encodeURIComponent(message)
