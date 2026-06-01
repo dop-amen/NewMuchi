@@ -2,6 +2,8 @@ import { createClient } from '@supabase/supabase-js'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getWhatsAppLink } from '@/lib/data'
+import { AddToCartButton } from '@/components/add-to-cart-button'
+
 
 const db = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -56,9 +58,8 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           </svg>
           Order via WhatsApp
         </a>
-        <button className="flex items-center justify-center w-full bg-[#5C3317] text-white py-4 rounded-xl font-semibold text-base">
-          Add to Cart
-        </button>
+        
+        <AddToCartButton product={product} />
       </div>
     </div>
   )

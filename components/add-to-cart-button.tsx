@@ -1,0 +1,25 @@
+'use client'
+
+import { addToCart } from '@/lib/cart'
+import { useRouter } from 'next/navigation'
+
+export function AddToCartButton({ product }: { product: any }) {
+  function handleAddToCart() {
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image_url: product.image_url ?? '',
+    })
+    // Show feedback
+    alert('Added to cart!')
+  }
+
+  return (
+    <button
+      onClick={handleAddToCart}
+      className="flex items-center justify-center w-full bg-[#5C3317] text-white py-4 rounded-xl font-semibold text-base hover:bg-[#C4874A] transition-colors">
+      Add to Cart
+    </button>
+  )
+}
