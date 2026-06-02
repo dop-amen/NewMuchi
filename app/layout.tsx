@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import MessengerFloat from '@/components/MessengerFloat'
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -30,14 +31,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${poppins.variable} ${playfair.variable} bg-background`}>
-      <body className="font-sans antialiased min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1">
-          {children}
-        </main>
-        <Footer />
-        {process.env.NODE_ENV === 'production' && <Analytics />}
-      </body>
+      <body className="font-sans antialiased min-h-screen">
+  <div className="flex flex-col min-h-screen">
+    <Header />
+    <main className="flex-1">{children}</main>
+    <Footer />
+  </div>
+  <MessengerFloat />
+</body>
     </html>
   )
 }

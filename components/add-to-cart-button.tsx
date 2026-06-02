@@ -2,6 +2,7 @@
 
 import { addToCart } from '@/lib/cart'
 import { useRouter } from 'next/navigation'
+import { FaCartShopping } from "react-icons/fa6";
 
 export function AddToCartButton({ product }: { product: any }) {
   function handleAddToCart() {
@@ -17,9 +18,10 @@ export function AddToCartButton({ product }: { product: any }) {
 
   return (
     <button
-      onClick={handleAddToCart}
-      className="flex items-center justify-center w-full bg-[#5C3317] text-white py-4 rounded-xl font-semibold text-base hover:bg-[#C4874A] transition-colors">
-      Add to Cart
-    </button>
+  onClick={handleAddToCart}
+  className="flex items-center justify-center gap-3 w-full bg-[#5C3317] text-white py-4 rounded-xl font-semibold text-base hover:bg-[#C4874A] transition-colors">
+  <FaCartShopping size={20} />
+  Add to Cart
+</button>
   )
 }

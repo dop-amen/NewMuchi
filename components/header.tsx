@@ -62,14 +62,10 @@ useEffect(() => {
             </Link>
 
 
-            {/* Right: Call button */}
+            {/* Right: Call only */}
             <div className="flex items-center">
-
-              <a  href={`tel:${WHATSAPP_NUMBER}`}
-                className="flex items-center gap-2 bg-primary text-white px-3 py-2 rounded-lg text-sm font-medium shadow-sm hover:opacity-90 transition-opacity"
-              >
-                <Phone className="w-4 h-4" />
-                <span>Call Us</span>
+              <a href={`tel:${WHATSAPP_NUMBER}`} className="p-2 text-primary">
+                <Phone className="w-5 h-5" />
               </a>
             </div>
           </div>
@@ -165,6 +161,7 @@ useEffect(() => {
     )}
   </div>
 </nav>
+
     </>
   )
 }
