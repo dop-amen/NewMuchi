@@ -146,7 +146,10 @@ export default function ProductDetailPage() {
   const avgRating = reviews.length
     ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1)
     : null
-  const whatsappMessage = `Hi, I want to order:\n\nProduct: ${product.name}\nPrice: ৳${product.price}${selectedSize ? `\nSize: ${selectedSize}` : ''}${selectedColor ? `\nColor: ${selectedColor}` : ''}\n\nPlease confirm availability.`
+
+  const messengerLink = `https://m.me/61577390296585?text=${encodeURIComponent(
+  `Hi! I want to order:\n\nProduct: ${product.name}\nPrice: ৳${product.price}\nLink: https://muchibari.netlify.app/shop/${product.id}`
+)}`
 
   return (
     <div className="min-h-screen">
@@ -279,7 +282,7 @@ export default function ProductDetailPage() {
 
             {/* Buttons */}
             <div className="mt-8 space-y-3">
-              <a href="https://www.messenger.com/t/61577390296585" target="_blank" rel="noopener noreferrer"
+              <a href={messengerLink} target="_blank" rel="noopener noreferrer"
   className="w-full text-white py-4 rounded-lg font-semibold hover:opacity-90 transition-colors flex items-center justify-center gap-3"
   style={{ backgroundColor: '#0084FF' }}>
   <FaFacebookMessenger size={24} color="white" />

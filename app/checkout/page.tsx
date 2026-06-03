@@ -33,10 +33,10 @@ export default function CheckoutPage() {
     const total = getCartTotal()
 
     const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({ user_id: user.id, total, address, status: 'pending' })
-      .select()
-      .single()
+    .from('orders')
+    .insert({ user_id: user.id, total, address, phone, status: 'pending' })
+    .select()
+    .single()
 
     if (orderError) {
       setError(orderError.message)

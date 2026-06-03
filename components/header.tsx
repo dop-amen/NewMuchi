@@ -67,6 +67,12 @@ useEffect(() => {
               <a href={`tel:${WHATSAPP_NUMBER}`} className="p-2 text-primary">
                 <Phone className="w-5 h-5" />
               </a>
+              <Link href="/cart" className="hidden md:flex p-2 text-primary">
+                <ShoppingCart className="w-5 h-5" />
+              </Link>
+              <Link href="/profile" className="hidden md:flex p-2 text-primary">
+                <UserCircle className="w-5 h-5" />
+              </Link>
             </div>
           </div>
         </div>
@@ -122,43 +128,42 @@ useEffect(() => {
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-border shadow-lg md:hidden">
   
   <div className="grid grid-cols-5 h-16 items-center">
-    <Link href="/shop" className="flex flex-col items-center justify-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
-      <ShoppingBag className="w-5 h-5" />
-      <span>Shop</span>
-    </Link>
-    
-    <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer"
-      className="flex flex-col items-center justify-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
-      <MessageCircle className="w-5 h-5" />
-      <span>Message</span>
-    </a>
-    
-    <Link href="/" className="flex flex-col items-center justify-center text-xs relative">
-      {/* Absolute positioning wrapper keeps the layout box intact while allowing the button to float up */}
-      <div className="absolute -top-10 flex flex-col items-center">
-        <div className="bg-primary text-white rounded-full p-3 shadow-lg">
-          <Home className="w-5 h-5" />
-        </div>
-        <span className="text-xs text-foreground/60 mt-1">Home</span>
-      </div>
-    </Link>
-    
-    <Link href="/cart" className="flex flex-col items-center justify-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
-      <ShoppingCart className="w-5 h-5" />
-      <span>Cart</span>
-    </Link>
-    
-    {user ? (
-      <Link href="/profile" className="flex flex-col items-center justify-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
-        <UserCircle className="w-5 h-5" />
-        <span>Profile</span>
-      </Link>
-    ) : (
-      <Link href="/auth/login" className="flex flex-col items-center justify-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
-        <LogIn className="w-5 h-5" />
-        <span>Login</span>
-      </Link>
-    )}
+    <Link href="/shop" className={`flex flex-col items-center justify-center gap-1 text-xs transition-colors ${pathname === '/shop' ? 'text-primary' : 'text-foreground/60 hover:text-primary'}`}>
+  <ShoppingBag className="w-5 h-5" />
+  <span>Shop</span>
+</Link>
+
+<a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noopener noreferrer"
+  className="flex flex-col items-center justify-center gap-1 text-xs text-foreground/60 hover:text-primary transition-colors">
+  <MessageCircle className="w-5 h-5" />
+  <span>Whatsapp</span>
+</a>
+
+<Link href="/" className="flex flex-col items-center justify-center text-xs relative">
+  <div className="absolute -top-10 flex flex-col items-center">
+    <div className={`rounded-full p-3 shadow-lg transition-colors ${pathname === '/' ? 'bg-primary text-white' : 'bg-gray-300 text-gray-500'}`}>
+  <Home className="w-5 h-5" />
+</div>
+    <span className="text-xs text-foreground/60 mt-1">Home</span>
+  </div>
+</Link>
+
+<Link href="/cart" className={`flex flex-col items-center justify-center gap-1 text-xs transition-colors ${pathname === '/cart' ? 'text-primary' : 'text-foreground/60 hover:text-primary'}`}>
+  <ShoppingCart className="w-5 h-5" />
+  <span>Cart</span>
+</Link>
+
+{user ? (
+  <Link href="/profile" className={`flex flex-col items-center justify-center gap-1 text-xs transition-colors ${pathname === '/profile' ? 'text-primary' : 'text-foreground/60 hover:text-primary'}`}>
+    <UserCircle className="w-5 h-5" />
+    <span>Profile</span>
+  </Link>
+) : (
+  <Link href="/auth/login" className={`flex flex-col items-center justify-center gap-1 text-xs transition-colors ${pathname === '/auth/login' ? 'text-primary' : 'text-foreground/60 hover:text-primary'}`}>
+    <LogIn className="w-5 h-5" />
+    <span>Login</span>
+  </Link>
+)}
   </div>
 </nav>
 
