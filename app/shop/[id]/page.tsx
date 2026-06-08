@@ -1,14 +1,130 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { AddToCartButton } from '@/components/add-to-cart-button'
-import { ArrowLeft, Truck, Shield, RotateCcw, Star } from 'lucide-react'
+import { ArrowLeft, Truck, Shield, RotateCcw, Star, ShoppingBag } from 'lucide-react'
 import { FaFacebookMessenger } from 'react-icons/fa'
+import { OrderNowModal } from '@/components/order-now-modal'
 
+
+function ProductGallery({ images, name, discount, isHotDeal }: {
+  images: string[]
+  name: string
+  discount: number
+  isHotDeal: boolean
+}) {
+  const [selected, setSelected] = useState(0)
+  const touchStartX = useRef<number | null>(null)
+
+  if (images.length === 0) {
+    return (
+      <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted flex items-center justify-center text-6xl">
+        👟
+      </div>
+    )
+  }
+
+  function prev() {
+    setSelected(i => (i === 0 ? images.length - 1 : i - 1))
+  }
+
+  function next() {
+    setSelected(i => (i === images.length - 1 ? 0 : i + 1))
+  }
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchStartX.current === null) return
+    const diff = touchStartX.current - e.changedTouches[0].clientX
+    if (Math.abs(diff) > 40) diff > 0 ? next() : prev()
+    touchStartX.current = null
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Main image */}
+      <div
+        className="relative aspect-square rounded-2xl overflow-hidden bg-muted"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <Image src={images[selected]} alt={name} fill className="object-cover" priority />
+
+        {/* Arrows — only show if more than 1 image */}
+        {images.length > 1 && (
+          <>
+            <button
+              onClick={prev}
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white/80 hover:bg-white shadow flex items-center justify-center transition-colors"
+              aria-label="Previous image"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+            <button
+              onClick={next}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white/80 hover:bg-white shadow flex items-center justify-center transition-colors"
+              aria-label="Next image"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+
+            {/* Dot indicators */}
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {images.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelected(i)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    selected === i ? 'bg-white' : 'bg-white/50'
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
+        {discount > 0 && (
+          <span className="absolute top-4 left-4 bg-secondary text-secondary-foreground text-sm font-semibold px-3 py-1.5 rounded-lg">
+            -{discount}% OFF
+          </span>
+        )}
+        {isHotDeal && (
+          <span className="absolute top-4 right-4 bg-orange-500 text-white text-sm font-semibold px-3 py-1.5 rounded-lg">
+            🔥 Hot Deal
+          </span>
+        )}
+      </div>
+
+      {/* Thumbnails */}
+      {images.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {images.map((src, i) => (
+            <button
+              key={i}
+              onClick={() => setSelected(i)}
+              className={`relative flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-colors ${
+                selected === i ? 'border-primary' : 'border-transparent hover:border-primary/40'
+              }`}
+            >
+              <Image src={src} alt={`${name} ${i + 1}`} fill className="object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function SizeGuide() {
   const [open, setOpen] = useState(false)
@@ -28,7 +144,11 @@ function SizeGuide() {
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
       >
-        <span>📏 Size Guide — সাইজ গাইড</span>
+        <span className="inline-flex items-center gap-1.5 font-medium text-slate-800">
+  <span>📏 Shoe Size Guide</span>
+  <span className="text-sm font-normal text-slate-500">(only for shoes)</span>
+</span>
+
         <span className="text-muted-foreground text-lg">{open ? '−' : '+'}</span>
       </button>
       {open && (
@@ -51,7 +171,7 @@ function SizeGuide() {
               ))}
             </tbody>
           </table>
-          <p className="text-xs text-muted-foreground text-center py-2">পা মেপে সঠিক সাইজ নিন</p>
+          <p className="text-xs text-muted-foreground text-center py-2">পায়ের পাতা থেকে গোড়ালি পর্যন্ত মেপে সঠিক সাইজ নিন</p>
         </div>
       )}
     </div>
@@ -67,6 +187,7 @@ export default function ProductDetailPage() {
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
   const [selectedColor, setSelectedColor] = useState<string | null>(null)
   const [relatedProducts, setRelatedProducts] = useState<any[]>([])
+  const [showOrderModal, setShowOrderModal] = useState(false)
 
   // Reviews
   const [reviews, setReviews] = useState<any[]>([])
@@ -174,24 +295,14 @@ export default function ProductDetailPage() {
         </Link>
 
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Image */}
-          <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted">
-            {product.image_url ? (
-              <Image src={product.image_url} alt={product.name} fill className="object-cover" priority />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-6xl">👟</div>
-            )}
-            {discount > 0 && (
-              <span className="absolute top-4 left-4 bg-secondary text-secondary-foreground text-sm font-semibold px-3 py-1.5 rounded-lg">
-                -{discount}% OFF
-              </span>
-            )}
-            {product.is_hot_deal && (
-              <span className="absolute top-4 right-4 bg-orange-500 text-white text-sm font-semibold px-3 py-1.5 rounded-lg">
-                🔥 Hot Deal
-              </span>
-            )}
-          </div>
+{/* Image Gallery */}
+{(() => {
+  const allImages = [
+    ...(product.image_url ? [product.image_url] : []),
+    ...(Array.isArray(product.image_urls) ? product.image_urls : []),
+  ]
+  return <ProductGallery images={allImages} name={product.name} discount={discount} isHotDeal={product.is_hot_deal} />
+})()}
 
           {/* Info */}
           <div>
@@ -281,16 +392,23 @@ export default function ProductDetailPage() {
             )}
 
             {/* Buttons */}
-            <div className="mt-8 space-y-3">
-              <a href={messengerLink} target="_blank" rel="noopener noreferrer"
-  className="w-full text-white py-4 rounded-lg font-semibold hover:opacity-90 transition-colors flex items-center justify-center gap-3"
-  style={{ backgroundColor: '#0084FF' }}>
-  <FaFacebookMessenger size={24} color="white" />
-  Order via Messenger
-</a>
-              <AddToCartButton product={product} />
-            </div>
-
+            {/* Buttons */}
+<div className="mt-8 space-y-3">
+  <button
+    onClick={() => setShowOrderModal(true)}
+    className="w-full bg-[#995628] text-white py-4 rounded-xl font-semibold text-base hover:bg-[#C4874A] transition-colors flex items-center justify-center gap-2"
+  >
+    <ShoppingBag className="w-5 h-5" />
+    Order Now
+  </button>
+  <a href={messengerLink} target="_blank" rel="noopener noreferrer"
+    className="w-full text-white py-4 rounded-lg font-semibold hover:opacity-90 transition-colors flex items-center justify-center gap-3"
+    style={{ backgroundColor: '#0084FF' }}>
+    <FaFacebookMessenger size={24} color="white" />
+    Order via Messenger
+  </a>
+  <AddToCartButton product={product} />
+</div>
             {/* Trust Badges */}
             <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-border">
               <div className="text-center">
@@ -418,6 +536,14 @@ export default function ProductDetailPage() {
           </section>
         )}
       </div>
+      {showOrderModal && (
+  <OrderNowModal
+    product={product}
+    selectedSize={selectedSize}
+    selectedColor={selectedColor}
+    onClose={() => setShowOrderModal(false)}
+  />
+)}
     </div>
   )
 }

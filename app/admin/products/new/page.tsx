@@ -13,8 +13,8 @@ export default function NewProductPage() {
   const [originalPrice, setOriginalPrice] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [categories, setCategories] = useState<any[]>([])
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState('')
+  const [imageFiles, setImageFiles] = useState<File[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
   const [sizes, setSizes] = useState('')
   const [colors, setColors] = useState('')
   const [isHotDeal, setIsHotDeal] = useState(false)
@@ -22,63 +22,56 @@ export default function NewProductPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    supabase.from('categories').select('*').then(({ data, error }) => {
-      if (error) console.error('Categories fetch error:', error)
-      setCategories(data ?? [])
-    })
+    supabase.from('categories').select('*').then(({ data }) => setCategories(data ?? []))
   }, [])
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) {
-      setImageFile(file)
-      setImagePreview(URL.createObjectURL(file))
-    }
+  function handleImagesChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []).slice(0, 5)
+    setImageFiles(files)
+    setImagePreviews(files.map(f => URL.createObjectURL(f)))
+  }
+
+  function removeImage(index: number) {
+    setImageFiles(prev => prev.filter((_, i) => i !== index))
+    setImagePreviews(prev => prev.filter((_, i) => i !== index))
+  }
+
+  async function uploadImage(file: File): Promise<string> {
+    const ext = file.name.split('.').pop()
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error } = await supabase.storage.from('products').upload(fileName, file)
+    if (error) throw new Error(error.message)
+    return supabase.storage.from('products').getPublicUrl(fileName).data.publicUrl
   }
 
   async function handleSubmit() {
     setLoading(true)
     setError('')
 
-    let image_url = ''
+    try {
+      const urls = await Promise.all(imageFiles.map(uploadImage))
+      const image_url = urls[0] ?? ''
+      const image_urls = urls.slice(1)
 
-    if (imageFile) {
-      const fileExt = imageFile.name.split('.').pop()
-      const fileName = `${Date.now()}.${fileExt}`
-      const { error: uploadError } = await supabase.storage
-        .from('products')
-        .upload(fileName, imageFile)
+      const { error: insertError } = await supabase.from('products').insert({
+        name,
+        description,
+        price: parseFloat(price),
+        original_price: originalPrice ? parseFloat(originalPrice) : null,
+        category_id: categoryId ? parseInt(categoryId) : null,
+        image_url,
+        image_urls,
+        in_stock: true,
+        sizes: sizes.trim() || null,
+        colors: colors.trim() || null,
+        is_hot_deal: isHotDeal,
+      })
 
-      if (uploadError) {
-        setError('Image upload failed: ' + uploadError.message)
-        setLoading(false)
-        return
-      }
-
-      const { data: urlData } = supabase.storage
-        .from('products')
-        .getPublicUrl(fileName)
-      image_url = urlData.publicUrl
-    }
-
-    const { error: insertError } = await supabase.from('products').insert({
-      name,
-      description,
-      price: parseFloat(price),
-      original_price: originalPrice ? parseFloat(originalPrice) : null,
-      category_id: categoryId ? parseInt(categoryId) : null,
-      image_url,
-      in_stock: true,
-      sizes: sizes.trim() || null,
-      colors: colors.trim() || null,
-      is_hot_deal: isHotDeal,
-    })
-
-    if (insertError) {
-      setError(insertError.message)
-      setLoading(false)
-    } else {
+      if (insertError) throw new Error(insertError.message)
       router.push('/admin/products')
+    } catch (err: any) {
+      setError(err.message)
+      setLoading(false)
     }
   }
 
@@ -109,7 +102,6 @@ export default function NewProductPage() {
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#C4874A]" />
           </div>
 
-          {/* Price Row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Price (৳) *</label>
@@ -119,8 +111,7 @@ export default function NewProductPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Original Price (৳)
-                <span className="text-gray-400 font-normal ml-1">optional</span>
+                Original Price (৳) <span className="text-gray-400 font-normal">optional</span>
               </label>
               <input type="number" value={originalPrice} onChange={e => setOriginalPrice(e.target.value)}
                 placeholder="e.g. 3500"
@@ -128,7 +119,6 @@ export default function NewProductPage() {
             </div>
           </div>
 
-          {/* Discount preview */}
           {discount > 0 && (
             <p className="text-sm text-green-600 font-medium">
               ✓ This product will show a <span className="font-bold">{discount}% OFF</span> tag
@@ -140,57 +130,66 @@ export default function NewProductPage() {
             <select value={categoryId} onChange={e => setCategoryId(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#C4874A]">
               <option value="">Select category</option>
-              {categories.map((cat) => (
+              {categories.map(cat => (
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </select>
           </div>
 
-          {/* Sizes */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Sizes
-              <span className="text-gray-400 font-normal ml-1">optional — comma separated</span>
+              Sizes <span className="text-gray-400 font-normal">optional — comma separated</span>
             </label>
             <input type="text" value={sizes} onChange={e => setSizes(e.target.value)}
               placeholder="e.g. 39,40,41,42,43"
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#C4874A]" />
           </div>
 
-          {/* Colors */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Colors
-              <span className="text-gray-400 font-normal ml-1">optional — comma separated</span>
+              Colors <span className="text-gray-400 font-normal">optional — comma separated</span>
             </label>
             <input type="text" value={colors} onChange={e => setColors(e.target.value)}
               placeholder="e.g. Black,Brown,Tan"
               className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#C4874A]" />
           </div>
 
-          {/* Hot Deal Toggle */}
           <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-lg px-4 py-3">
             <div>
               <p className="text-sm font-medium text-gray-700">🔥 Hot Deal</p>
               <p className="text-xs text-gray-400 mt-0.5">Show this product in the Hot Deals slider on homepage</p>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsHotDeal(!isHotDeal)}
-              className={`relative w-12 h-6 rounded-full transition-colors ${isHotDeal ? 'bg-orange-500' : 'bg-gray-300'}`}
-            >
+            <button type="button" onClick={() => setIsHotDeal(!isHotDeal)}
+              className={`relative w-12 h-6 rounded-full transition-colors ${isHotDeal ? 'bg-orange-500' : 'bg-gray-300'}`}>
               <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${isHotDeal ? 'translate-x-7' : 'translate-x-1'}`} />
             </button>
           </div>
 
-          {/* Image */}
+          {/* Multi-image upload */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
-            <input type="file" accept="image/*" onChange={handleImageChange}
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Product Images <span className="text-gray-400 font-normal">up to 5 — first image is the main one</span>
+            </label>
+            <input type="file" accept="image/*" multiple onChange={handleImagesChange}
               className="w-full border border-gray-300 rounded-lg px-4 py-2" />
-            {imagePreview && (
-              <img src={imagePreview} alt="Preview"
-                className="mt-3 w-32 h-32 object-cover rounded-lg" />
+            {imagePreviews.length > 0 && (
+              <div className="flex flex-wrap gap-3 mt-3">
+                {imagePreviews.map((src, i) => (
+                  <div key={i} className="relative">
+                    <img src={src} alt={`Preview ${i + 1}`}
+                      className="w-24 h-24 object-cover rounded-lg" />
+                    {i === 0 && (
+                      <span className="absolute top-1 left-1 bg-[#5C3317] text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
+                        Main
+                      </span>
+                    )}
+                    <button type="button" onClick={() => removeImage(i)}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 

@@ -13,7 +13,7 @@ export default async function AdminOrdersPage() {
 
   const { data: orders } = await sb
     .from('orders')
-    .select('*, profiles(full_name), order_items(*, products(id, name, image_url))')
+.select('*, profiles(full_name), order_items(*, products(id, name, image_url)), guest_name, is_guest')
     .order('created_at', { ascending: false })
 
   return (
@@ -33,7 +33,10 @@ export default async function AdminOrdersPage() {
                 <div>
                   <span className="font-bold text-gray-800">Order #{order.id}</span>
                   <p className="text-xs text-gray-400 mt-0.5">{new Date(order.created_at).toLocaleDateString()}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Customer: {order.profiles?.full_name ?? 'Unknown'}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+  Customer: {order.profiles?.full_name ?? order.guest_name ?? 'Unknown'}
+  {order.is_guest && <span className="ml-1 text-[#C4874A]">(Guest)</span>}
+</p>
                   <p className="text-xs text-gray-500">📞 {order.phone ?? 'No phone'}</p>
                   <p className="text-xs text-gray-500">📍 {order.address}</p>
                 </div>

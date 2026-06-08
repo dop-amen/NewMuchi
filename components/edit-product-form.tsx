@@ -15,62 +15,97 @@ export function EditProductForm({ product, categories }: { product: any, categor
   const [isHotDeal, setIsHotDeal] = useState(product.is_hot_deal ?? false)
   const [sizes, setSizes] = useState(product.sizes ?? '')
   const [colors, setColors] = useState(product.colors ?? '')
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState(product.image_url ?? '')
+
+  // existing saved URLs — main + extras
+  const [mainImageUrl, setMainImageUrl] = useState<string>(product.image_url ?? '')
+  const [extraImageUrls, setExtraImageUrls] = useState<string[]>(product.image_urls ?? [])
+
+  // new files to upload
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([])
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([])
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (file) {
-      setImageFile(file)
-      setImagePreview(URL.createObjectURL(file))
-    }
-  }
 
   const discount = originalPrice && price
     ? Math.round(((parseFloat(originalPrice) - parseFloat(price)) / parseFloat(originalPrice)) * 100)
     : 0
 
+  const totalImageCount = (mainImageUrl ? 1 : 0) + extraImageUrls.length + newImageFiles.length
+
+  function handleNewImagesChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const allowed = 5 - totalImageCount
+    if (allowed <= 0) return
+    const files = Array.from(e.target.files ?? []).slice(0, allowed)
+    setNewImageFiles(prev => [...prev, ...files])
+    setNewImagePreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))])
+    e.target.value = ''
+  }
+
+  function removeNewImage(index: number) {
+    setNewImageFiles(prev => prev.filter((_, i) => i !== index))
+    setNewImagePreviews(prev => prev.filter((_, i) => i !== index))
+  }
+
+  function removeExtraUrl(index: number) {
+    setExtraImageUrls(prev => prev.filter((_, i) => i !== index))
+  }
+
+  function removeMainImage() {
+    // promote first extra to main, or clear
+    if (extraImageUrls.length > 0) {
+      setMainImageUrl(extraImageUrls[0])
+      setExtraImageUrls(prev => prev.slice(1))
+    } else {
+      setMainImageUrl('')
+    }
+  }
+
+  async function uploadImage(file: File): Promise<string> {
+    const ext = file.name.split('.').pop()
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error } = await supabase.storage.from('products').upload(fileName, file)
+    if (error) throw new Error(error.message)
+    return supabase.storage.from('products').getPublicUrl(fileName).data.publicUrl
+  }
+
   async function handleSave() {
     setLoading(true)
     setError('')
 
-    let image_url = product.image_url
+    try {
+      const uploadedUrls = await Promise.all(newImageFiles.map(uploadImage))
 
-    if (imageFile) {
-      const fileExt = imageFile.name.split('.').pop()
-      const fileName = `${Date.now()}.${fileExt}`
-      const { error: uploadError } = await supabase.storage
-        .from('products')
-        .upload(fileName, imageFile)
-      if (uploadError) {
-        setError('Image upload failed: ' + uploadError.message)
-        setLoading(false)
-        return
+      // if main was removed, first new upload becomes main
+      let finalMain = mainImageUrl
+      let finalExtras = [...extraImageUrls]
+
+      if (!finalMain && uploadedUrls.length > 0) {
+        finalMain = uploadedUrls[0]
+        finalExtras = [...finalExtras, ...uploadedUrls.slice(1)]
+      } else {
+        finalExtras = [...finalExtras, ...uploadedUrls]
       }
-      const { data: urlData } = supabase.storage.from('products').getPublicUrl(fileName)
-      image_url = urlData.publicUrl
-    }
 
-    const { error: updateError } = await supabase.from('products').update({
-      name,
-      description,
-      price: parseFloat(price),
-      original_price: originalPrice ? parseFloat(originalPrice) : null,
-      category_id: categoryId ? parseInt(categoryId) : null,
-      image_url,
-      in_stock: inStock,
-      is_hot_deal: isHotDeal,
-      sizes: sizes.trim() || null,
-      colors: colors.trim() || null,
-    }).eq('id', product.id)
+      const { error: updateError } = await supabase.from('products').update({
+        name,
+        description,
+        price: parseFloat(price),
+        original_price: originalPrice ? parseFloat(originalPrice) : null,
+        category_id: categoryId ? parseInt(categoryId) : null,
+        image_url: finalMain,
+        image_urls: finalExtras,
+        in_stock: inStock,
+        is_hot_deal: isHotDeal,
+        sizes: sizes.trim() || null,
+        colors: colors.trim() || null,
+      }).eq('id', product.id)
 
-    if (updateError) {
-      setError(updateError.message)
-      setLoading(false)
-    } else {
+      if (updateError) throw new Error(updateError.message)
       router.push('/admin/products')
+    } catch (err: any) {
+      setError(err.message)
+      setLoading(false)
     }
   }
 
@@ -84,6 +119,7 @@ export function EditProductForm({ product, categories }: { product: any, categor
     <div className="bg-white rounded-xl shadow-sm p-6 max-w-2xl">
       {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
       <div className="space-y-4">
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
           <input type="text" value={name} onChange={e => setName(e.target.value)}
@@ -96,7 +132,6 @@ export function EditProductForm({ product, categories }: { product: any, categor
             className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#C4874A]" />
         </div>
 
-        {/* Price Row */}
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Price (৳) *</label>
@@ -105,8 +140,7 @@ export function EditProductForm({ product, categories }: { product: any, categor
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Original Price (৳)
-              <span className="text-gray-400 font-normal ml-1">optional</span>
+              Original Price (৳) <span className="text-gray-400 font-normal">optional</span>
             </label>
             <input type="number" value={originalPrice} onChange={e => setOriginalPrice(e.target.value)}
               placeholder="e.g. 3500"
@@ -125,35 +159,30 @@ export function EditProductForm({ product, categories }: { product: any, categor
           <select value={categoryId} onChange={e => setCategoryId(e.target.value)}
             className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#C4874A]">
             <option value="">Select category</option>
-            {categories.map((cat) => (
+            {categories.map(cat => (
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>
         </div>
 
-        {/* Sizes */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Sizes
-            <span className="text-gray-400 font-normal ml-1">optional — comma separated</span>
+            Sizes <span className="text-gray-400 font-normal">optional — comma separated</span>
           </label>
           <input type="text" value={sizes} onChange={e => setSizes(e.target.value)}
             placeholder="e.g. 39,40,41,42,43"
             className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#C4874A]" />
         </div>
 
-        {/* Colors */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Colors
-            <span className="text-gray-400 font-normal ml-1">optional — comma separated</span>
+            Colors <span className="text-gray-400 font-normal">optional — comma separated</span>
           </label>
           <input type="text" value={colors} onChange={e => setColors(e.target.value)}
             placeholder="e.g. Black,Brown,Tan"
             className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#C4874A]" />
         </div>
 
-        {/* In Stock + Hot Deal */}
         <div className="flex items-center gap-3">
           <input type="checkbox" id="inStock" checked={inStock} onChange={e => setInStock(e.target.checked)}
             className="w-4 h-4" />
@@ -165,44 +194,85 @@ export function EditProductForm({ product, categories }: { product: any, categor
             <p className="text-sm font-medium text-gray-700">🔥 Hot Deal</p>
             <p className="text-xs text-gray-400 mt-0.5">Show in the Hot Deals slider on homepage</p>
           </div>
-          <button
-  type="button"
-  onClick={() => setIsHotDeal(!isHotDeal)}
-  style={{
-    width: 48,
-    height: 26,
-    borderRadius: 999,
-    backgroundColor: isHotDeal ? '#f97316' : '#d1d5db',
-    position: 'relative',
-    border: 'none',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
-    flexShrink: 0,
-  }}
->
-  <span style={{
-    position: 'absolute',
-    top: 3,
-    left: isHotDeal ? 25 : 3,
-    width: 20,
-    height: 20,
-    borderRadius: '50%',
-    backgroundColor: 'white',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-    transition: 'left 0.2s',
-    display: 'block',
-  }} />
-</button>
+          <button type="button" onClick={() => setIsHotDeal(!isHotDeal)}
+            style={{
+              width: 48, height: 26, borderRadius: 999,
+              backgroundColor: isHotDeal ? '#f97316' : '#d1d5db',
+              position: 'relative', border: 'none', cursor: 'pointer',
+              transition: 'background-color 0.2s', flexShrink: 0,
+            }}>
+            <span style={{
+              position: 'absolute', top: 3,
+              left: isHotDeal ? 25 : 3,
+              width: 20, height: 20, borderRadius: '50%',
+              backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+              transition: 'left 0.2s', display: 'block',
+            }} />
+          </button>
         </div>
 
-        {/* Image */}
+        {/* Images section */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
-          {imagePreview && (
-            <img src={imagePreview} alt="Preview" className="w-32 h-32 object-cover rounded-lg mb-3" />
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Product Images
+            <span className="text-gray-400 font-normal ml-1">({totalImageCount}/5)</span>
+          </label>
+
+          {/* Existing saved images */}
+          {(mainImageUrl || extraImageUrls.length > 0) && (
+            <div className="flex flex-wrap gap-3 mb-3">
+              {mainImageUrl && (
+                <div className="relative">
+                  <img src={mainImageUrl} alt="Main"
+                    className="w-24 h-24 object-cover rounded-lg" />
+                  <span className="absolute top-1 left-1 bg-[#5C3317] text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
+                    Main
+                  </span>
+                  <button type="button" onClick={removeMainImage}
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">
+                    ×
+                  </button>
+                </div>
+              )}
+              {extraImageUrls.map((url, i) => (
+                <div key={i} className="relative">
+                  <img src={url} alt={`Extra ${i + 1}`}
+                    className="w-24 h-24 object-cover rounded-lg" />
+                  <button type="button" onClick={() => removeExtraUrl(i)}
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
           )}
-          <input type="file" accept="image/*" onChange={handleImageChange}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2" />
+
+          {/* New image previews (not yet saved) */}
+          {newImagePreviews.length > 0 && (
+            <div className="flex flex-wrap gap-3 mb-3">
+              {newImagePreviews.map((src, i) => (
+                <div key={i} className="relative">
+                  <img src={src} alt={`New ${i + 1}`}
+                    className="w-24 h-24 object-cover rounded-lg opacity-80 border-2 border-dashed border-[#C4874A]" />
+                  <span className="absolute top-1 left-1 bg-[#C4874A] text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
+                    New
+                  </span>
+                  <button type="button" onClick={() => removeNewImage(i)}
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs flex items-center justify-center hover:bg-red-600">
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {totalImageCount < 5 && (
+            <input type="file" accept="image/*" multiple onChange={handleNewImagesChange}
+              className="w-full border border-gray-300 rounded-lg px-4 py-2" />
+          )}
+          {totalImageCount >= 5 && (
+            <p className="text-xs text-gray-400">Maximum 5 images reached. Remove one to add another.</p>
+          )}
         </div>
 
         <div className="flex gap-3">
