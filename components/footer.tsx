@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Phone, MapPin, Mail, Facebook, Instagram } from 'lucide-react'
+import { Phone, MapPin, Mail, Facebook, Instagram, Youtube } from 'lucide-react'
 import { WHATSAPP_NUMBER } from '@/lib/data'
 import { createSupabaseServer } from '@/lib/supabase-server'
 
@@ -48,22 +48,33 @@ export async function Footer() {
 
           {/* Contact */}
           <div>
-            <h3 className="font-semibold text-lg mb-4">Contact Us</h3>
-            <ul className="space-y-3">
-              <li className="flex items-center gap-2 text-primary-foreground/80">
-                <Phone className="w-4 h-4 flex-shrink-0" />
-                <a href={`tel:${WHATSAPP_NUMBER}`} className="hover:text-primary-foreground transition-colors">{WHATSAPP_NUMBER}</a>
-              </li>
-              <li className="flex items-center gap-2 text-primary-foreground/80">
-                <Mail className="w-4 h-4 flex-shrink-0" />
-                <a href="mailto:muchibari01@gmail.com" className="hover:text-primary-foreground transition-colors">muchibari01@gmail.com</a>
-              </li>
-              <li className="flex items-start gap-2 text-primary-foreground/80">
-                <MapPin className="w-4 h-4 flex-shrink-0 mt-1" />
-                <span>44/1 Sher-E-Bangla Road, Leather Market, Hazaribag Dhaka- 1209, Dhaka, Bangladesh</span>
-              </li>
-            </ul>
-          </div>
+  <h3 className="font-semibold text-lg mb-4">Contact Us</h3>
+  <ul className="space-y-3">
+    <li className="flex items-center gap-2 text-primary-foreground/80">
+      <Phone className="w-4 h-4 flex-shrink-0" />
+      <a href={`tel:${WHATSAPP_NUMBER}`} className="hover:text-primary-foreground transition-colors">
+        {WHATSAPP_NUMBER}
+      </a>
+    </li>
+    <li className="flex items-center gap-2 text-primary-foreground/80">
+      <Mail className="w-4 h-4 flex-shrink-0" />
+      <a href="mailto:muchibari01@gmail.com" className="hover:text-primary-foreground transition-colors">
+        muchibari01@gmail.com
+      </a>
+    </li>
+    <li className="flex items-start gap-2 text-primary-foreground/80">
+      <MapPin className="w-4 h-4 flex-shrink-0 mt-1" />
+      <a 
+        href="https://maps.app.goo.gl/QqttAYo4ZUp91rMd9"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="hover:text-primary-foreground transition-colors text-left"
+      >
+        <span>44/1 Sher-E-Bangla Road, Leather Market, Hazaribag Dhaka- 1209, Dhaka, Bangladesh</span>
+      </a>
+    </li>
+  </ul>
+</div>
 
           {/* Social */}
           <div>
@@ -72,6 +83,7 @@ export async function Footer() {
               {[
                 { href: 'https://www.facebook.com/people/Muchi-Bari/61577390296585/', Icon: Facebook, label: 'Facebook' },
                 { href: 'https://www.instagram.com/muchi_bari/', Icon: Instagram, label: 'Instagram' },
+                { href: 'https://www.youtube.com/@muchibari-q4s', Icon: Youtube, label: 'YouTube' },
               ].map(({ href, Icon, label }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
                   className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors">

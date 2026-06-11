@@ -114,13 +114,13 @@ export default function AboutPage() {
       </div>
 
       <div className="order-2">
-        <span className="text-secondary font-semibold">The CEO</span>
+        <span className="text-secondary font-semibold">The Managing Director</span>
         <h2 className="font-serif text-3xl lg:text-4xl font-bold text-foreground mt-2">
           Md. Shakib Alam
         </h2>
 
         <div className="mt-4 space-y-1">
-          <p className="text-sm font-semibold text-secondary">Partner & CEO</p>
+          <p className="text-sm font-semibold text-secondary">Partner & MD</p>
           <p className="text-sm text-foreground/70">BSS in Economics, Dhaka College</p>
         </div>
       </div>

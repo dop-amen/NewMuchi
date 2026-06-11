@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { AddToCartButton } from '@/components/add-to-cart-button'
-import { ArrowLeft, Truck, Shield, RotateCcw, Star, ShoppingBag } from 'lucide-react'
+import { ArrowLeft, Truck, Shield, RotateCcw, Star, ShoppingBag, CheckCircle2, AlertTriangle, ShieldCheck, XCircle } from 'lucide-react'
 import { FaFacebookMessenger } from 'react-icons/fa'
 import { OrderNowModal } from '@/components/order-now-modal'
 
@@ -145,9 +145,9 @@ function SizeGuide() {
         className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
       >
         <span className="inline-flex items-center gap-1.5 font-medium text-slate-800">
-  <span>📏 Shoe Size Guide</span>
-  <span className="text-sm font-normal text-slate-500">(only for shoes)</span>
-</span>
+          <span>📏 Shoe Size Guide</span>
+          <span className="text-sm font-normal text-slate-500">(only for shoes)</span>
+        </span>
 
         <span className="text-muted-foreground text-lg">{open ? '−' : '+'}</span>
       </button>
@@ -171,16 +171,20 @@ function SizeGuide() {
               ))}
             </tbody>
           </table>
-          <p className="text-xs text-muted-foreground text-center py-2">পায়ের পাতা থেকে গোড়ালি পর্যন্ত মেপে সঠিক সাইজ নিন</p>
+          <p className="text-xs text-muted-foreground text-center py-2">পায়ের পাতা থেকে গোড়ালি পর্যন্ত মেপে সঠিক সাইজ নিন</p>
         </div>
       )}
     </div>
   )
 }
 
+
 export default function ProductDetailPage() {
   const params = useParams()
   const id = params.id as string
+
+  const [descOpen, setDescOpen] = useState(false)
+  const [policyOpen, setPolicyOpen] = useState(false)
 
   const [product, setProduct] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -269,8 +273,8 @@ export default function ProductDetailPage() {
     : null
 
   const messengerLink = `https://m.me/61577390296585?text=${encodeURIComponent(
-  `Hi! I want to order:\n\nProduct: ${product.name}\nPrice: ৳${product.price}\nLink: https://muchibari.netlify.app/shop/${product.id}`
-)}`
+    `Hi! I want to order:\n\nProduct: ${product.name}\nPrice: ৳${product.price}\nLink: https://muchibari.netlify.app/shop/${product.id}`
+  )}`
 
   return (
     <div className="min-h-screen">
@@ -295,14 +299,14 @@ export default function ProductDetailPage() {
         </Link>
 
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
-{/* Image Gallery */}
-{(() => {
-  const allImages = [
-    ...(product.image_url ? [product.image_url] : []),
-    ...(Array.isArray(product.image_urls) ? product.image_urls : []),
-  ]
-  return <ProductGallery images={allImages} name={product.name} discount={discount} isHotDeal={product.is_hot_deal} />
-})()}
+          {/* Image Gallery */}
+          {(() => {
+            const allImages = [
+              ...(product.image_url ? [product.image_url] : []),
+              ...(Array.isArray(product.image_urls) ? product.image_urls : []),
+            ]
+            return <ProductGallery images={allImages} name={product.name} discount={discount} isHotDeal={product.is_hot_deal} />
+          })()}
 
           {/* Info */}
           <div>
@@ -341,11 +345,6 @@ export default function ProductDetailPage() {
               {product.in_stock ? 'In Stock' : 'Out of Stock'}
             </span>
 
-            {/* Description */}
-            {product.description && (
-              <p className="text-foreground/80 leading-relaxed mt-4">{product.description}</p>
-            )}
-
             {/* Sizes */}
             {sizes.length > 0 && (
               <div className="mt-6">
@@ -367,8 +366,13 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Size Guide */}
-            <SizeGuide />
+            {/* Size Guide — Automatically hide for belts and wallets */}
+            {(() => {
+              const categoryName = product.categories?.name?.toLowerCase() || '';
+              const isBeltOrWallet = categoryName.includes('belt') || categoryName.includes('wallet');
+              
+              return !isBeltOrWallet ? <SizeGuide /> : null;
+            })()}
 
             {/* Colors */}
             {colors.length > 0 && (
@@ -392,23 +396,23 @@ export default function ProductDetailPage() {
             )}
 
             {/* Buttons */}
-            {/* Buttons */}
-<div className="mt-8 space-y-3">
-  <button
-    onClick={() => setShowOrderModal(true)}
-    className="w-full bg-[#995628] text-white py-4 rounded-xl font-semibold text-base hover:bg-[#C4874A] transition-colors flex items-center justify-center gap-2"
-  >
-    <ShoppingBag className="w-5 h-5" />
-    Order Now
-  </button>
-  <a href={messengerLink} target="_blank" rel="noopener noreferrer"
-    className="w-full text-white py-4 rounded-lg font-semibold hover:opacity-90 transition-colors flex items-center justify-center gap-3"
-    style={{ backgroundColor: '#0084FF' }}>
-    <FaFacebookMessenger size={24} color="white" />
-    Order via Messenger
-  </a>
-  <AddToCartButton product={product} />
-</div>
+            <div className="mt-8 space-y-3">
+              <button
+                onClick={() => setShowOrderModal(true)}
+                className="w-full bg-[#995628] text-white py-4 rounded-xl font-semibold text-base hover:bg-[#C4874A] transition-colors flex items-center justify-center gap-2"
+              >
+                <ShoppingBag className="w-5 h-5" />
+                Order Now | Cash on Delivery
+              </button>
+              <a href={messengerLink} target="_blank" rel="noopener noreferrer"
+                className="w-full text-white py-4 rounded-lg font-semibold hover:opacity-90 transition-colors flex items-center justify-center gap-3"
+                style={{ backgroundColor: '#0084FF' }}>
+                <FaFacebookMessenger size={24} color="white" />
+                Order via Messenger
+              </a>
+              <AddToCartButton product={product} />
+            </div>
+
             {/* Trust Badges */}
             <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-border">
               <div className="text-center">
@@ -430,6 +434,253 @@ export default function ProductDetailPage() {
                 <p className="text-xs mt-2 text-muted-foreground">সহজ রিটার্ন</p>
               </div>
             </div>
+
+            {/* Description Accordion */}
+            {product.description && (
+              <div className="mt-6 border border-border rounded-lg overflow-hidden">
+                <button
+                  onClick={() => setDescOpen(!descOpen)}
+                  className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-muted transition-colors"
+                >
+                  <span className="inline-flex items-center gap-1.5 font-medium text-slate-800">
+                    📝 Product Details <span className="text-sm font-normal text-slate-500">(পণ্য বিবরণী)</span>
+                  </span>
+                  <span className="text-muted-foreground text-lg">{descOpen ? '−' : '+'}</span>
+                </button>
+                {descOpen && (
+                  <div className="border-t border-border p-4 bg-background">
+                    <p className="text-foreground/80 text-sm leading-relaxed whitespace-pre-line">
+                      {product.description}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Policy Accordion Tab */}
+            <div className="w-full border border-border rounded-lg overflow-hidden mt-10">
+              {/* Clickable Accordion Header */}
+              <button
+                type="button"
+                onClick={() => setPolicyOpen(!policyOpen)}
+                className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-foreground hover:bg-muted transition-colors text-left"
+              >
+                <span className="inline-flex items-center gap-1.5 font-medium text-primary">
+                  🔄 রিটার্ন, এক্সচেঞ্জ ও ওয়ারেন্টি পলিসি
+                </span>
+                <span className="text-muted-foreground text-lg">
+                  {policyOpen ? '−' : '+'}
+                </span>
+              </button>
+
+              {/* Hidden Content Box */}
+              {policyOpen && (
+                <div className="p-6 space-y-6 border-t border-stone-200 max-h-[65vh] overflow-y-auto bg-white">
+
+  {/* RETURN POLICY */}
+  <div className="rounded-3xl border-2 border-blue-100 bg-blue-50 p-6 space-y-5">
+    <h3 className="flex items-center gap-3 text-xl font-extrabold text-blue-700">
+      <RotateCcw className="w-6 h-6" />
+      রিটার্ন পলিসি
+    </h3>
+
+    <div className="space-y-4 text-sm text-gray-700">
+      <div className="flex gap-3">
+        <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+        <p>পণ্য ডেলিভারির সময় অবশ্যই ডেলিভারি ম্যানের সামনে চেক করে গ্রহণ করতে হবে।</p>
+      </div>
+
+      <div className="flex gap-3">
+        <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+        <p>ড্যামেজ বা ভুল পণ্য পেলে সাথে সাথে আমাদের জানাতে হবে।</p>
+      </div>
+
+      <div className="flex gap-3">
+        <CheckCircle2 className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+        <p>এই ক্ষেত্রে সম্পূর্ণ দায়ভার কর্তৃপক্ষ বহন করবে এবং প্রয়োজন অনুযায়ী রিপ্লেসমেন্ট বা এক্সচেঞ্জ দেওয়া হবে।</p>
+      </div>
+    </div>
+
+    <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-4 flex gap-3">
+      <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+      <p className="text-sm font-medium text-amber-800">
+        ডেলিভারির সময় চেক না করলে পরবর্তীতে অভিযোগ গ্রহণযোগ্য নাও হতে পারে।
+      </p>
+    </div>
+  </div>
+
+  {/* EXCHANGE POLICY */}
+  <div className="rounded-3xl border-2 border-emerald-100 bg-emerald-50 p-6 space-y-5">
+    <h3 className="flex items-center gap-3 text-xl font-extrabold text-emerald-700">
+      <RotateCcw className="w-6 h-6" />
+      এক্সচেঞ্জ পলিসি
+    </h3>
+
+    <div className="space-y-4 text-sm text-gray-700">
+      <div className="flex gap-3">
+        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+        <p>সাইজ সমস্যা বা পছন্দ না হলে ডেলিভারির ৭ দিনের মধ্যে এক্সচেঞ্জ করা যাবে।</p>
+      </div>
+
+      <div className="flex gap-3">
+        <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+        <p>রিফান্ড প্রযোজ্য নয়, শুধুমাত্র এক্সচেঞ্জ সুবিধা রয়েছে।</p>
+      </div>
+    </div>
+
+    <div className="rounded-2xl border-2 border-emerald-200 bg-white p-5">
+      <h4 className="font-bold text-emerald-700 mb-4">
+        এক্সচেঞ্জের শর্তাবলী:
+      </h4>
+
+      <div className="space-y-3 text-sm text-gray-700">
+        <div className="flex gap-3">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+          <p>পণ্য অবশ্যই অব্যবহৃত (unused) হতে হবে</p>
+        </div>
+
+        <div className="flex gap-3">
+          <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+          <p>অরিজিনাল প্যাকেজিং, বক্স ও ট্যাগ অক্ষত থাকতে হবে</p>
+        </div>
+      </div>
+    </div>
+
+    <div className="rounded-2xl border-2 border-rose-200 bg-rose-50 p-4 flex gap-3">
+      <XCircle className="w-5 h-5 text-rose-600 shrink-0" />
+      <p className="font-medium text-rose-700">
+        ব্যবহৃত বা ড্যামেজড পণ্য এক্সচেঞ্জযোগ্য নয়।
+      </p>
+    </div>
+  </div>
+
+  {/* DELIVERY POLICY */}
+  <div className="rounded-3xl border-2 border-purple-100 bg-purple-50 p-6 space-y-5">
+    <h3 className="flex items-center gap-3 text-xl font-extrabold text-purple-700">
+      <Truck className="w-6 h-6" />
+      ডেলিভারি চার্জ পলিসি
+    </h3>
+
+    <div className="rounded-2xl border-2 border-emerald-200 bg-white p-5">
+      <h4 className="font-bold text-emerald-700 mb-4">
+        ✓ কর্তৃপক্ষ বহন করবে
+      </h4>
+
+      <ul className="space-y-3 text-sm text-gray-700">
+        <li>• সঠিক সাইজ না পাঠানো হলে</li>
+        <li>• ভুল প্রোডাক্ট ডেলিভারি হলে</li>
+        <li>• কালার, সাইজ বা ড্যামেজ সংক্রান্ত ত্রুটি থাকলে</li>
+      </ul>
+    </div>
+
+    <div className="rounded-2xl border-2 border-orange-200 bg-white p-5">
+      <h4 className="font-bold text-orange-700 mb-4">
+        ⚠ কাস্টমার বহন করবে
+      </h4>
+
+      <ul className="space-y-3 text-sm text-gray-700">
+        <li>• সঠিক সাইজ দেওয়ার পরও ফিট না হলে</li>
+        <li>• পণ্য পছন্দ না হলে</li>
+        <li>• লোকেশনে না থাকায় পার্সেল ক্যান্সেল হলে</li>
+      </ul>
+    </div>
+  </div>
+
+  {/* WARRANTY */}
+  <div className="rounded-3xl border-2 border-amber-100 bg-amber-50 p-6 space-y-5">
+    <h3 className="flex items-center gap-3 text-xl font-extrabold text-amber-700">
+      <ShieldCheck className="w-6 h-6" />
+      ওয়ারেন্টি পলিসি
+    </h3>
+
+    <p className="text-sm text-gray-600">
+      আমাদের পণ্যের ধরন অনুযায়ী ওয়ারেন্টি সুবিধা প্রদান করা হয়।
+    </p>
+
+    <div className="space-y-4">
+
+      <div className="rounded-2xl border-2 border-amber-200 bg-white p-5">
+        <h4 className="font-bold text-amber-700 mb-2">
+          👡 স্যান্ডেল ও লোফার
+        </h4>
+        <p className="text-sm text-gray-700">
+          ৩ মাসের ফ্রি রিপেয়ার ওয়ারেন্টি
+        </p>
+      </div>
+
+      <div className="rounded-2xl border-2 border-amber-200 bg-white p-5">
+        <h4 className="font-bold text-amber-700 mb-2">
+          👞 ক্যাজুয়াল, ফরমাল ও বুট
+        </h4>
+        <p className="text-sm text-gray-700">
+          ৪ মাসের রিপেয়ার ওয়ারেন্টি
+        </p>
+        <p className="text-sm text-gray-700">
+          ৬ মাসের সোল গ্যারান্টি
+        </p>
+      </div>
+
+      <div className="rounded-2xl border-2 border-amber-200 bg-white p-5">
+        <h4 className="font-bold text-amber-700 mb-4">
+          ওয়ারেন্টির আওতাভুক্ত:
+        </h4>
+
+        <div className="space-y-3 text-sm text-gray-700">
+          <div className="flex gap-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <p>সোল ফেটে যাওয়া</p>
+          </div>
+
+          <div className="flex gap-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <p>চামড়া ফেটে যাওয়া</p>
+          </div>
+
+          <div className="flex gap-3">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <p>সেলাই খুলে যাওয়া</p>
+          </div>
+        </div>
+
+        <p className="mt-4 border-t pt-4 italic text-gray-500 text-sm">
+          এক্ষেত্রে আমরা রিপেয়ার অথবা এক্সচেঞ্জ সার্ভিস প্রদান করবো।
+        </p>
+      </div>
+
+      <div className="rounded-2xl border-2 border-rose-200 bg-rose-50 p-4">
+        <h4 className="font-bold text-rose-700 mb-2">
+          ✕ ওয়ারেন্টির বাইরে
+        </h4>
+
+        <p className="text-sm text-gray-700">
+          আগুনে পোড়া, অতিরিক্ত পানির কারণে ক্ষতি, বাহ্যিক আঘাতে নষ্ট হওয়া।
+        </p>
+      </div>
+    </div>
+  </div>
+
+  {/* FOOTER */}
+  <div className="rounded-3xl border-2 border-stone-200 bg-stone-50 p-6 text-center space-y-4">
+    <p className="font-semibold text-gray-700">
+      যেকোনো সহায়তার জন্য আমাদের সাথে যোগাযোগ করুন
+    </p>
+
+    <a 
+  href="tel:+8801969592755" 
+  className="inline-flex items-center justify-center rounded-2xl bg-[#995628] px-5 py-3 text-white font-bold shadow-md hover:bg-[#C4874A] transition-colors"
+>
+  📞 হেল্পলাইন: +8801969592755
+</a>
+
+    <p className="text-[#995628] font-semibold">
+      👉 আপনার সন্তুষ্টিই আমাদের অগ্রাধিকার
+    </p>
+  </div>
+
+</div>
+              )}
+            </div>
+
           </div>
         </div>
 
@@ -537,13 +788,13 @@ export default function ProductDetailPage() {
         )}
       </div>
       {showOrderModal && (
-  <OrderNowModal
-    product={product}
-    selectedSize={selectedSize}
-    selectedColor={selectedColor}
-    onClose={() => setShowOrderModal(false)}
-  />
-)}
+        <OrderNowModal
+          product={product}
+          selectedSize={selectedSize}
+          selectedColor={selectedColor}
+          onClose={() => setShowOrderModal(false)}
+        />
+      )}
     </div>
   )
 }

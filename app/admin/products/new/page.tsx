@@ -23,15 +23,28 @@ export default function NewProductPage() {
 
   useEffect(() => {
     supabase.from('categories').select('*').then(({ data }) => setCategories(data ?? []))
+    
+    // Cleanup preview URLs on unmount to save browser memory
+    return () => {
+      imagePreviews.forEach(url => URL.revokeObjectURL(url))
+    }
   }, [])
 
   function handleImagesChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []).slice(0, 5)
+    // Clean up older previews to prevent memory bloat
+    imagePreviews.forEach(url => URL.revokeObjectURL(url))
+
+    // Increased .slice(0, 5) to .slice(0, 10) to support up to 10 files
+    const files = Array.from(e.target.files ?? []).slice(0, 10)
     setImageFiles(files)
     setImagePreviews(files.map(f => URL.createObjectURL(f)))
   }
 
   function removeImage(index: number) {
+    // Revoke the specific URL object before removing it from state
+    if (imagePreviews[index]) {
+      URL.revokeObjectURL(imagePreviews[index])
+    }
     setImageFiles(prev => prev.filter((_, i) => i !== index))
     setImagePreviews(prev => prev.filter((_, i) => i !== index))
   }
@@ -51,7 +64,7 @@ export default function NewProductPage() {
     try {
       const urls = await Promise.all(imageFiles.map(uploadImage))
       const image_url = urls[0] ?? ''
-      const image_urls = urls.slice(1)
+      const image_urls = urls.slice(1) // Automatically catches indexes 1 through 9
 
       const { error: insertError } = await supabase.from('products').insert({
         name,
@@ -165,10 +178,10 @@ export default function NewProductPage() {
             </button>
           </div>
 
-          {/* Multi-image upload */}
+          {/* Multi-image upload updated label to reflect up to 10 images */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Product Images <span className="text-gray-400 font-normal">up to 5 — first image is the main one</span>
+              Product Images <span className="text-gray-400 font-normal">up to 10 — first image is the main one</span>
             </label>
             <input type="file" accept="image/*" multiple onChange={handleImagesChange}
               className="w-full border border-gray-300 rounded-lg px-4 py-2" />
@@ -177,7 +190,7 @@ export default function NewProductPage() {
                 {imagePreviews.map((src, i) => (
                   <div key={i} className="relative">
                     <img src={src} alt={`Preview ${i + 1}`}
-                      className="w-24 h-24 object-cover rounded-lg" />
+                      className="w-24 h-24 object-cover rounded-lg border border-gray-100" />
                     {i === 0 && (
                       <span className="absolute top-1 left-1 bg-[#5C3317] text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
                         Main

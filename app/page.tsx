@@ -17,19 +17,36 @@ const categoryEmojis: Record<string, string> = {
 
 export default async function HomePage() {
   const supabase = await createSupabaseServer()
-const { data: bannerData } = await supabase.from('hero_banner').select('mobile_image_url, desktop_image_url').eq('id', 1).single()
+
+  // 1. Fetch the banner using a clean response wrapper to avoid TypeScript naming conflicts
+  const bannerResponse = await supabase
+    .from('hero_banner')
+    .select('mobile_image_url, desktop_image_url')
+    .eq('id', 1)
+    .maybeSingle()
+
+  // 2. This safely prints the result to your terminal window running "npm run dev"
+  console.log('--- SUPABASE DEBUG START ---')
+  console.log('BANNER DATA:', bannerResponse.data)
+  console.log('BANNER ERROR:', bannerResponse.error)
+  console.log('--- SUPABASE DEBUG END ---')
+
+  // 3. Assign the data to bannerData so the rest of your original code keeps working
+  const bannerData = bannerResponse.data
+  
+  // Unused variable clean up to prevent any further warnings
   const bannerUrl = bannerData?.mobile_image_url ?? bannerData?.desktop_image_url ?? null
 
+  // 4. Fetch your categories
   const { data: categories } = await supabase.from('categories').select('*')
 
-  // Hot deals
+  // 5. Fetch Hot deals
   const { data: hotDeals } = await supabase
     .from('products')
     .select('*, categories(name, slug)')
     .eq('is_hot_deal', true)
     .eq('in_stock', true)
     .limit(10)
-
   // Per-category products (first 4 categories)
   const topCategories = (categories ?? []).slice(0, 4)
   const categoryProducts: Record<number, any[]> = {}

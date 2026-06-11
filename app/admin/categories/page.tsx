@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { DeleteCategoryButton } from '@/components/delete-category-button'
 import { AddCategoryForm } from '@/components/add-category-form'
+import { EditCategoryImageButton } from '@/components/edit-category-image-button'
 
 export default async function AdminCategoriesPage() {
   const sb = await createSupabaseServer()
@@ -28,22 +29,33 @@ export default async function AdminCategoriesPage() {
         <table className="w-full text-sm">
           <thead className="bg-[#FAF5EF] border-b">
             <tr>
+              <th className="text-left p-4 font-semibold text-[#5C3317]">Image</th>
               <th className="text-left p-4 font-semibold text-[#5C3317]">Name</th>
               <th className="text-left p-4 font-semibold text-[#5C3317]">Slug</th>
               <th className="text-left p-4 font-semibold text-[#5C3317]">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {(categories ?? []).map((cat: any) => (
-              <tr key={cat.id} className="border-b hover:bg-[#FAF5EF]/50">
-                <td className="p-4 font-medium">{cat.name}</td>
-                <td className="p-4 text-gray-500">{cat.slug}</td>
-                <td className="p-4">
-                  <DeleteCategoryButton id={cat.id} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
+  {(categories ?? []).map((cat: any) => (
+    <tr key={cat.id} className="border-b hover:bg-[#FAF5EF]/50">
+      {/* Column 1: Image Button (Matches "Image" th) */}
+      <td className="p-4 w-48">
+        <EditCategoryImageButton categoryId={cat.id} currentImageUrl={cat.image_url} />
+      </td>
+      
+      {/* Column 2: Name (Matches "Name" th) */}
+      <td className="p-4 font-medium text-gray-800">{cat.name}</td>
+      
+      {/* Column 3: Slug (Matches "Slug" th) */}
+      <td className="p-4 text-gray-500">{cat.slug}</td>
+      
+      {/* Column 4: Delete Button (Matches "Actions" th) */}
+      <td className="p-4">
+        <DeleteCategoryButton id={cat.id} />
+      </td>
+    </tr>
+  ))}
+</tbody>
         </table>
       </div>
     </div>
