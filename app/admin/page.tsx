@@ -26,6 +26,7 @@ export default async function AdminPage() {
           { label: 'Orders', href: '/admin/orders', emoji: '📦' },
           { label: 'Reviews', href: '/admin/reviews', emoji: '⭐' },
           { label: 'Banner', href: '/admin/banners', emoji: '🖼️' },
+          { label: 'Settings', href: '/admin/settings', emoji: '⚙️' },
         ].map((item) => (
           <Link key={item.href} href={item.href}
             className="bg-white rounded-xl p-6 shadow-sm flex flex-col items-center gap-3 hover:shadow-md transition-shadow">
