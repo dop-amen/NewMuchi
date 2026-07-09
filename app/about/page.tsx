@@ -57,37 +57,40 @@ export default function AboutPage() {
       </section>
 
       {/* Owner Section */}
+
 <section className="py-16 lg:py-24 bg-muted">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div className="grid lg:grid-cols-2 gap-12 items-center">
       <div className="order-2 lg:order-1">
-        <span className="text-secondary font-semibold">The Founder</span>
+        <span className="text-base text-secondary font-semibold">The Founder</span>
         <h2 className="font-serif text-3xl lg:text-4xl font-bold text-foreground mt-2">
           Engr. Md. Shah Alam
         </h2>
 
         <div className="mt-4 space-y-1">
-          <p className="text-sm font-semibold text-secondary">Founder & Managing Partner</p>
-          <p className="text-sm text-foreground/70">BSc in Leather Engineering, ILET, University of Dhaka</p>
+          <p className="text-lg font-semibold text-secondary">Founder & Managing Partner</p>
+          <p className="text-base text-foreground/70">BSc in Leather Engineering, ILET, University of Dhaka</p>
         </div>
 
         <div className="mt-5 space-y-3">
           <div>
-            <p className="text-sm font-semibold text-foreground">Managing Partner, Glorious Trade International</p>
-            <ul className="mt-1 space-y-0.5 text-sm text-foreground/70 list-disc list-inside ml-1">
-              <li>Sole Agent, Alcoven, Spain</li>
+            <p className="text-base font-semibold text-foreground">Managing Partner</p>
+            <p className="text-lg font-bold text-secondary">Glorious Trade International</p>
+            <ul className="mt-1 space-y-0.5 text-base text-foreground/70 list-disc list-inside ml-1">
+              <li>Sole Agent, Alcover, Spain</li>
               <li>All kinds of L/R Chemical Indentor & Importer</li>
             </ul>
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">Proprietor, S. Alam Corporation</p>
-            <ul className="mt-1 space-y-0.5 text-sm text-foreground/70 list-disc list-inside ml-1">
+            <p className="text-base font-semibold text-foreground">Proprietor</p>
+            <p className="text-lg font-bold text-secondary">S. Alam Corporation</p>
+            <ul className="mt-1 space-y-0.5 text-base text-foreground/70 list-disc list-inside ml-1">
               <li>Leather Buying, 1st Class Contractor, Supplier & Importer</li>
             </ul>
           </div>
           <div>
-            <p className="text-sm font-semibold text-foreground">Senior Joint Secretary</p>
-            <p className="text-sm text-foreground/70 ml-1">Leather Engineers & Technologists Society, Bangladesh</p>
+            <p className="text-base font-semibold text-foreground">Senior Joint Secretary</p>
+            <p className="text-lg font-bold text-secondary ml-1">LEATHER ENGINEERS & TECHNOLOGISTS SOCIETY, Bangladesh</p>
           </div>
         </div>
       </div>
@@ -114,14 +117,14 @@ export default function AboutPage() {
       </div>
 
       <div className="order-2">
-        <span className="text-secondary font-semibold">The Managing Director</span>
+        <span className="text-base text-secondary font-semibold">The Managing Director</span>
         <h2 className="font-serif text-3xl lg:text-4xl font-bold text-foreground mt-2">
           Md. Shakib Alam
         </h2>
 
         <div className="mt-4 space-y-1">
-          <p className="text-sm font-semibold text-secondary">Partner & MD</p>
-          <p className="text-sm text-foreground/70">BSS in Economics, Dhaka College</p>
+          <p className="text-lg font-semibold text-secondary">Partner & Head of Sales and Marketing</p>
+          <p className="text-base text-foreground/70">BSS in Economics, Dhaka College</p>
         </div>
       </div>
     </div>

@@ -3,14 +3,19 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { getCart, getCartTotal, clearCart, CartItem } from '@/lib/cart'
+import { getCart, getCartTotal, clearCart, isWalletOnlyCart, CartItem } from '@/lib/cart'
 
 export default function CheckoutPage() {
   const router = useRouter()
   const [cart, setCart] = useState<CartItem[]>([])
   const [deliveryZone, setDeliveryZone] = useState<'inside' | 'outside'>('inside')
-const deliveryCharge = deliveryZone === 'inside' ? 80 : 150
-const finalTotal = getCartTotal() + deliveryCharge
+
+  // Wallet rate only applies when EVERY item in the cart is a wallet
+  const walletOnly = isWalletOnlyCart(cart)
+  const rates = walletOnly ? { inside: 60, outside: 100 } : { inside: 80, outside: 130 }
+  const deliveryCharge = deliveryZone === 'inside' ? rates.inside : rates.outside
+  const finalTotal = getCartTotal() + deliveryCharge
+
   const [address, setAddress] = useState('')
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
@@ -37,9 +42,27 @@ const finalTotal = getCartTotal() + deliveryCharge
 
     const total = getCartTotal()
 
+    const noteparts = cart
+      .filter(item => item.size || item.color)
+      .map(item => {
+        const bits = [item.size && `Size: ${item.size}`, item.color && `Color: ${item.color}`].filter(Boolean)
+        return `${item.name} (${bits.join(', ')})`
+      })
+    const addressWithNotes = noteparts.length
+      ? `${address.trim()}\n[${noteparts.join(' | ')}]`
+      : address.trim()
+
     const { data: order, error: orderError } = await supabase
     .from('orders')
-    .insert({ user_id: user.id, total, address, phone, status: 'pending' })
+    .insert({
+      user_id: user.id,
+      total: finalTotal,
+      delivery_zone: deliveryZone === 'inside' ? 'Inside Dhaka' : 'Outside Dhaka',
+      delivery_charge: deliveryCharge,
+      address: addressWithNotes,
+      phone,
+      status: 'pending',
+    })
     .select()
     .single()
 
@@ -74,7 +97,16 @@ const finalTotal = getCartTotal() + deliveryCharge
     <h2 className="font-semibold text-gray-700 mb-3">Order Summary</h2>
     {cart.map(item => (
       <div key={item.id} className="flex justify-between items-center py-2 border-b last:border-0">
-        <span className="text-sm text-gray-700">{item.name} × {item.quantity}</span>
+        <div className="flex flex-col">
+          <span className="text-sm text-gray-700">{item.name} × {item.quantity}</span>
+          {(item.size || item.color) && (
+            <span className="text-xs text-gray-400 mt-0.5">
+              {item.size && `Size: ${item.size}`}
+              {item.size && item.color && ' • '}
+              {item.color && `Color: ${item.color}`}
+            </span>
+          )}
+        </div>
         <span className="text-sm font-semibold text-[#5C3317]">৳{item.price * item.quantity}</span>
       </div>
     ))}
@@ -143,7 +175,7 @@ const finalTotal = getCartTotal() + deliveryCharge
           <p className="font-medium text-foreground">Inside Dhaka</p>
         </div>
       </div>
-      <span className="text-sm font-semibold text-primary">৳80</span>
+      <span className="text-sm font-semibold text-primary">৳{rates.inside}</span>
     </label>
 
     {/* Outside Dhaka */}
@@ -164,7 +196,7 @@ const finalTotal = getCartTotal() + deliveryCharge
           <p className="font-medium text-foreground">Outside Dhaka</p>
         </div>
       </div>
-      <span className="text-sm font-semibold text-primary">৳150</span>
+      <span className="text-sm font-semibold text-primary">৳{rates.outside}</span>
     </label>
   </div>
 </div>
@@ -172,7 +204,7 @@ const finalTotal = getCartTotal() + deliveryCharge
       <div className="mx-4 mt-4">
         <button
           onClick={handlePlaceOrder}
-          disabled={loading || !address || !phone}
+          disabled={loading || !address.trim() || !phone.trim()}
           className="w-full bg-[#5C3317] text-white py-4 rounded-xl font-semibold text-base hover:bg-[#C4874A] transition-colors disabled:opacity-50">
           {loading ? 'Placing Order...' : 'Place Order'}
           (৳{finalTotal})

@@ -83,7 +83,7 @@ export async function Footer() {
               {[
                 { href: 'https://www.facebook.com/people/Muchi-Bari/61577390296585/', Icon: Facebook, label: 'Facebook' },
                 { href: 'https://www.instagram.com/muchi_bari/', Icon: Instagram, label: 'Instagram' },
-                { href: 'https://www.youtube.com/@muchibari-q4s', Icon: Youtube, label: 'YouTube' },
+                { href: 'https://www.youtube.com/@muchibari_1', Icon: Youtube, label: 'YouTube' },
               ].map(({ href, Icon, label }) => (
                 <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label}
                   className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center hover:bg-primary-foreground/20 transition-colors">

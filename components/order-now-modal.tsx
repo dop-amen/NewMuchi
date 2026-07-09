@@ -14,23 +14,53 @@ interface Props {
 
 export function OrderNowModal({ product, selectedSize, selectedColor, onClose }: Props) {
   const router = useRouter()
+
+  // Wallets get a discounted delivery rate, everything else uses the standard rate
+  const categoryName = product?.categories?.name?.toLowerCase() || ''
+  const isWallet = categoryName.includes('wallet')
+  const rates = isWallet
+    ? { inside: 60, outside: 100 }
+    : { inside: 80, outside: 130 }
+
   const [deliveryZone, setDeliveryZone] = useState<'inside' | 'outside'>('inside')
-  const deliveryCharge = deliveryZone === 'inside' ? 80 : 150
-  
+  const deliveryCharge = deliveryZone === 'inside' ? rates.inside : rates.outside
+
+  // Colors as specified during product upload
+  const colors = product.colors
+    ? product.colors.split(',').map((c: string) => c.trim()).filter(Boolean)
+    : []
+  const [colorChoice, setColorChoice] = useState<string | null>(selectedColor ?? null)
+
+  // Sizes as specified during product upload
+  const sizes = product.sizes
+    ? product.sizes.split(',').map((s: string) => s.trim()).filter(Boolean)
+    : []
+  const [sizeChoice, setSizeChoice] = useState<string | null>(selectedSize ?? null)
+
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
   const [quantity, setQuantity] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [touched, setTouched] = useState(false)
 
   // Calculations based strictly on this specific single product bundle
   const itemTotal = product.price * quantity
   const finalTotal = itemTotal + deliveryCharge
 
+  const nameValid = name.trim().length > 0
+  const phoneValid = phone.trim().length > 0
+  const addressValid = address.trim().length > 0
+  const colorValid = colors.length === 0 || !!colorChoice
+  const sizeValid = sizes.length === 0 || !!sizeChoice
+  const formValid = nameValid && phoneValid && addressValid && colorValid && sizeValid
+
   async function handleOrder() {
-    if (!name.trim() || !phone.trim() || !address.trim()) {
-      setError('Please fill in all fields.')
+    setTouched(true)
+
+    if (!formValid) {
+      setError('Please fill in all fields before placing your order.')
       return
     }
     setLoading(true)
@@ -39,11 +69,11 @@ export function OrderNowModal({ product, selectedSize, selectedColor, onClose }:
     const { data: { user } } = await supabase.auth.getUser()
 
     const noteparts = []
-    if (selectedSize) noteparts.push(`Size: ${selectedSize}`)
-    if (selectedColor) noteparts.push(`Color: ${selectedColor}`)
+    if (sizeChoice) noteparts.push(`Size: ${sizeChoice}`)
+    if (colorChoice) noteparts.push(`Color: ${colorChoice}`)
     const addressWithNote = noteparts.length
-      ? `${address}\n[${noteparts.join(', ')}]`
-      : address
+      ? `${address.trim()}\n[${noteparts.join(', ')}]`
+      : address.trim()
 
     const { data: order, error: orderErr } = await supabase
       .from('orders')
@@ -53,17 +83,17 @@ export function OrderNowModal({ product, selectedSize, selectedColor, onClose }:
         delivery_zone: deliveryZone === 'inside' ? 'Inside Dhaka' : 'Outside Dhaka',
         delivery_charge: deliveryCharge,
         address: addressWithNote,
-        phone,
+        phone: phone.trim(),
         status: 'pending',
         is_guest: !user,
-        guest_name: user ? null : name,
+        guest_name: user ? null : name.trim(),
       })
       .select()
       .single()
 
     if (orderErr) {
       setError(orderErr.message)
-      loading && setLoading(false)
+      setLoading(false)
       return
     }
 
@@ -140,11 +170,11 @@ export function OrderNowModal({ product, selectedSize, selectedColor, onClose }:
                 )}
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold text-gray-800 line-clamp-1">{product.name}</span>
-                  {(selectedSize || selectedColor) && (
+                  {(sizeChoice || colorChoice) && (
                     <div className="flex gap-1.5 text-xs text-gray-500 mt-0.5 font-medium">
-                      {selectedSize && <span>Size: {selectedSize}</span>}
-                      {selectedSize && selectedColor && <span>•</span>}
-                      {selectedColor && <span>Color: {selectedColor}</span>}
+                      {sizeChoice && <span>Size: {sizeChoice}</span>}
+                      {sizeChoice && colorChoice && <span>•</span>}
+                      {colorChoice && <span>Color: {colorChoice}</span>}
                     </div>
                   )}
                 </div>
@@ -179,30 +209,97 @@ export function OrderNowModal({ product, selectedSize, selectedColor, onClose }:
           </div>
         </div>
 
+        {/* Size Selector — required if the product has sizes */}
+        {sizes.length > 0 && (
+          <div className="mb-4">
+            <h3 className="font-bold text-xs text-gray-400 uppercase tracking-wider mb-2">
+              Select Size <span className="normal-case text-gray-400 font-normal">(সাইজ নির্বাচন করুন) *</span>
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {sizes.map((size: string) => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => setSizeChoice(size)}
+                  className={`min-w-[40px] px-3.5 py-1.5 rounded-lg border-2 text-xs font-semibold transition-colors ${
+                    sizeChoice === size
+                      ? 'border-[#995628] bg-[#995628] text-white'
+                      : 'border-gray-200 text-gray-700 hover:border-[#995628]/50'
+                  }`}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+            {touched && !sizeValid && <p className="text-red-500 text-xs mt-1.5 ml-1">Please select a size</p>}
+          </div>
+        )}
+
+        {/* Color Selector — required if the product has colors */}
+        {colors.length > 0 && (
+          <div className="mb-4">
+            <h3 className="font-bold text-xs text-gray-400 uppercase tracking-wider mb-2">
+              Select Color <span className="normal-case text-gray-400 font-normal">(রঙ নির্বাচন করুন) *</span>
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {colors.map((color: string) => (
+                <button
+                  key={color}
+                  type="button"
+                  onClick={() => setColorChoice(color)}
+                  className={`px-3.5 py-1.5 rounded-lg border-2 text-xs font-semibold transition-colors ${
+                    colorChoice === color
+                      ? 'border-[#995628] bg-[#995628] text-white'
+                      : 'border-gray-200 text-gray-700 hover:border-[#995628]/50'
+                  }`}
+                >
+                  {color}
+                </button>
+              ))}
+            </div>
+            {touched && !colorValid && <p className="text-red-500 text-xs mt-1.5 ml-1">Please select a color</p>}
+          </div>
+        )}
+
         {/* Delivery Form inputs */}
         <div className="space-y-3 mb-4">
           <h3 className="font-bold text-xs text-gray-400 uppercase tracking-wider">Shipping Details</h3>
-          <input
-            type="text"
-            placeholder="Your name (আপনার নাম)"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#995628] focus:border-transparent transition-all bg-gray-50/30"
-          />
-          <input
-            type="tel"
-            placeholder="Phone number (মোবাইল নম্বর)"
-            value={phone}
-            onChange={e => setPhone(e.target.value)}
-            className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#995628] focus:border-transparent transition-all bg-gray-50/30"
-          />
-          <textarea
-            placeholder="Full delivery address (পূর্ণ ঠিকানা)"
-            value={address}
-            onChange={e => setAddress(e.target.value)}
-            rows={2}
-            className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#995628] focus:border-transparent transition-all bg-gray-50/30 resize-none"
-          />
+          <div>
+            <input
+              type="text"
+              placeholder="Your name (আপনার নাম) *"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#995628] focus:border-transparent transition-all bg-gray-50/30 ${
+                touched && !nameValid ? 'border-red-400' : 'border-gray-300'
+              }`}
+            />
+            {touched && !nameValid && <p className="text-red-500 text-xs mt-1 ml-1">Name is required</p>}
+          </div>
+          <div>
+            <input
+              type="tel"
+              placeholder="Phone number (মোবাইল নম্বর) *"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#995628] focus:border-transparent transition-all bg-gray-50/30 ${
+                touched && !phoneValid ? 'border-red-400' : 'border-gray-300'
+              }`}
+            />
+            {touched && !phoneValid && <p className="text-red-500 text-xs mt-1 ml-1">Phone number is required</p>}
+          </div>
+          <div>
+            <textarea
+              placeholder="Full delivery address (পূর্ণ ঠিকানা) *"
+              value={address}
+              onChange={e => setAddress(e.target.value)}
+              rows={2}
+              className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#995628] focus:border-transparent transition-all bg-gray-50/30 resize-none ${
+                touched && !addressValid ? 'border-red-400' : 'border-gray-300'
+              }`}
+            />
+            {touched && !addressValid && <p className="text-red-500 text-xs mt-1 ml-1">Delivery address is required</p>}
+          </div>
         </div>
 
         {/* Delivery Zone Options */}
@@ -228,7 +325,7 @@ export function OrderNowModal({ product, selectedSize, selectedColor, onClose }:
                 />
                 <span className="text-xs font-bold text-gray-700">Inside Dhaka</span>
               </div>
-              <span className="text-xs font-black text-[#995628]">৳80</span>
+              <span className="text-xs font-black text-[#995628]">৳{rates.inside}</span>
             </label>
 
             {/* Outside Dhaka */}
@@ -247,7 +344,7 @@ export function OrderNowModal({ product, selectedSize, selectedColor, onClose }:
                 />
                 <span className="text-xs font-bold text-gray-700">Outside Dhaka</span>
               </div>
-              <span className="text-xs font-black text-[#995628]">৳150</span>
+              <span className="text-xs font-black text-[#995628]">৳{rates.outside}</span>
             </label>
           </div>
         </div>
