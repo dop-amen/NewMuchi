@@ -17,8 +17,17 @@ function ProductGallery({ images, name, discount, isHotDeal }: {
   discount: number
   isHotDeal: boolean
 }) {
-  const [selected, setSelected] = useState(0)
+const [selected, setSelected] = useState(0)
   const touchStartX = useRef<number | null>(null)
+  const [zoomActive, setZoomActive] = useState(false)
+  const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 })
+
+  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    setZoomOrigin({ x, y })
+  }
 
   if (images.length === 0) {
     return (
@@ -54,8 +63,21 @@ function ProductGallery({ images, name, discount, isHotDeal }: {
         className="relative aspect-square rounded-2xl overflow-hidden bg-muted"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
+        onMouseEnter={() => setZoomActive(true)}
+        onMouseLeave={() => setZoomActive(false)}
+        onMouseMove={handleMouseMove}
       >
-        <Image src={images[selected]} alt={name} fill className="object-cover" priority />
+        <Image
+          src={images[selected]}
+          alt={name}
+          fill
+          className="object-cover transition-transform duration-150 ease-out"
+          style={{
+            transform: zoomActive ? 'scale(2)' : 'scale(1)',
+            transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
+          }}
+          priority
+        />
 
         {/* Arrows — only show if more than 1 image */}
         {images.length > 1 && (

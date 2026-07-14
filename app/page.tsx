@@ -143,7 +143,7 @@ export default async function HomePage() {
                 : null
               return (
                 <Link key={product.id} href={`/shop/${product.id}`}
-                  className="flex-shrink-0 w-40 bg-white rounded-xl overflow-hidden shadow-sm">
+                  className="flex-shrink-0 w-40 bg-white rounded-xl overflow-hidden shadow-sm relative transition-transform duration-200 hover:scale-108 hover:z-10 hover:shadow-lg">
                   <div className="relative">
                     {product.image_url ? (
                       <img src={product.image_url} alt={product.name} className="w-full h-36 object-cover" />
@@ -157,11 +157,11 @@ export default async function HomePage() {
                     )}
                   </div>
                   <div className="p-2">
-                    <p className="text-xs font-semibold text-gray-800 truncate">{product.name}</p>
+                    <p className="text-sm font-semibold text-gray-800 truncate">{product.name}</p>
                     <div className="flex items-center gap-1 mt-1">
-                      <p className="text-sm font-bold text-[#5C3317]">৳{product.price}</p>
+                      <p className="text-base font-bold text-[#5C3317]">৳{product.price}</p>
                       {product.original_price && (
-                        <p className="text-xs text-gray-400 line-through">৳{product.original_price}</p>
+                        <p className="text-sm text-gray-400 line-through">৳{product.original_price}</p>
                       )}
                     </div>
                     <div className="w-full mt-2 bg-[#5C3317] text-white text-xs py-1.5 rounded-lg text-center">
@@ -191,15 +191,15 @@ export default async function HomePage() {
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
               {products.map((product) => (
                 <Link key={product.id} href={`/shop/${product.id}`}
-                  className="flex-shrink-0 w-40 bg-white rounded-xl overflow-hidden shadow-sm">
+                  className="flex-shrink-0 w-40 bg-white rounded-xl overflow-hidden shadow-sm relative transition-transform duration-200 hover:scale-108 hover:z-10 hover:shadow-lg">
                   {product.image_url ? (
                     <img src={product.image_url} alt={product.name} className="w-full h-36 object-cover" />
                   ) : (
                     <div className="w-full h-36 bg-gray-100 flex items-center justify-center text-4xl">👟</div>
                   )}
                   <div className="p-2">
-                    <p className="text-xs font-semibold text-gray-800 truncate">{product.name}</p>
-                    <p className="text-sm font-bold text-[#5C3317] mt-1">৳{product.price}</p>
+                    <p className="text-sm font-semibold text-gray-800 truncate">{product.name}</p>
+                    <p className="text-base font-bold text-[#5C3317] mt-1">৳{product.price}</p>
                     <div className="w-full mt-2 bg-[#5C3317] text-white text-xs py-1.5 rounded-lg text-center">
                       Order Now
                     </div>

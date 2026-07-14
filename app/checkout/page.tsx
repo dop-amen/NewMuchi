@@ -4,11 +4,15 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { getCart, getCartTotal, clearCart, isWalletOnlyCart, CartItem } from '@/lib/cart'
+import Image from 'next/image'
+import Link from 'next/link'
+
 
 export default function CheckoutPage() {
   const router = useRouter()
-  const [cart, setCart] = useState<CartItem[]>([])
+ const [cart, setCart] = useState<CartItem[]>([])
   const [deliveryZone, setDeliveryZone] = useState<'inside' | 'outside'>('inside')
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([])
 
   // Wallet rate only applies when EVERY item in the cart is a wallet
   const walletOnly = isWalletOnlyCart(cart)
@@ -28,9 +32,17 @@ export default function CheckoutPage() {
     if (items.length === 0) router.push('/cart')
     setCart(items)
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
+supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) router.push('/auth/login')
     })
+
+    supabase
+      .from('products')
+      .select('*')
+      .eq('is_hot_deal', true)
+      .eq('in_stock', true)
+      .limit(6)
+      .then(({ data }) => setRelatedProducts(data ?? []))
   }, [])
 
   async function handlePlaceOrder() {
@@ -210,6 +222,61 @@ export default function CheckoutPage() {
           (৳{finalTotal})
         </button>
       </div>
+
+      <div className="grid grid-cols-3 gap-4 text-center mx-4 mt-12">
+        <div className="flex flex-col items-center gap-2">
+          <Image src="/icons/24-hours.png" alt="24 Hours Delivery" width={40} height={40} className="text-[#5C3317]" />
+          <p className="text-[10px] text-gray-700 leading-tight">
+            24-48 Hours Super<br />Fast Delivery
+          </p>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <Image src="/icons/delivery-man.png" alt="24 Hours Delivery" width={40} height={40} className="text-[#5C3317]" />
+          <p className="text-[10px] text-gray-700 leading-tight">
+            Check and Trial and<br />Cash on Delivery
+          </p>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <Image src="/icons/fast-delivery.png" alt="24 Hours Delivery" width={40} height={40} className="text-[#5C3317]" />
+          <p className="text-[10px] text-gray-700 leading-tight">
+            No Extra Charge for<br />Size Exchange
+          </p>
+        </div>
+</div>
+
+      {relatedProducts.length > 0 && (
+        <section className="mx-4 mt-10">
+          <h2 className="font-serif text-2xl font-bold text-foreground mb-6">You May Also Like</h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {relatedProducts.map((p) => (
+              <Link key={p.id} href={`/shop/${p.id}`}
+                className="bg-card rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow group">
+                <div className="relative aspect-square overflow-hidden bg-muted">
+                  {p.image_url ? (
+                    <Image src={p.image_url} alt={p.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-4xl">👟</div>
+                  )}
+                  {p.original_price && p.original_price > p.price && (
+                    <span className="absolute top-3 left-3 bg-secondary text-secondary-foreground text-xs font-semibold px-2 py-1 rounded">
+                      -{Math.round(((p.original_price - p.price) / p.original_price) * 100)}%
+                    </span>
+                  )}
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-foreground line-clamp-1">{p.name}</h3>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-lg font-bold text-primary">৳{p.price}</span>
+                    {p.original_price && p.original_price > p.price && (
+                      <span className="text-sm text-muted-foreground line-through">৳{p.original_price}</span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }
