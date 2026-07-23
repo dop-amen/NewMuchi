@@ -33,16 +33,13 @@ export function EditCategoryImageButton({ categoryId, currentImageUrl }: EditCat
 
       // 1. Upload new image to your existing bucket (assuming name is 'banners' or 'categories')
       // Update 'banners' to your specific bucket name if different
-      const { error: uploadError } = await supabaseClient.storage
-        .from('banners') 
-        .upload(filePath, file, { upsert: true })
+const { error: uploadError } = await supabaseClient.storage
+  .from('categories')   // was 'banners'
+  .upload(filePath, file, { upsert: true })
 
-      if (uploadError) throw uploadError
-
-      // 2. Get the public asset URL
-      const { data: { publicUrl } } = supabaseClient.storage
-        .from('banners')
-        .getPublicUrl(filePath)
+const { data: { publicUrl } } = supabaseClient.storage
+  .from('categories')   // was 'banners'
+  .getPublicUrl(filePath)
 
       // 3. Update the category row with the new image URL
       const { error: updateError } = await supabaseClient

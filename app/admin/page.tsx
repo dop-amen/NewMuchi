@@ -6,6 +6,7 @@ export default async function AdminPage() {
   const supabase = await createSupabaseServer()
   const { data: { user } } = await supabase.auth.getUser()
 
+  console.log('USER ID:', user?.id, 'EMAIL:', user?.email)
   if (!user) redirect('/auth/login')
 
   const { data: profile } = await supabase
@@ -34,6 +35,7 @@ export default async function AdminPage() {
             <span className="font-semibold text-[#5C3317]">{item.label}</span>
           </Link>
         ))}
+        
       </div>
     </div>
   )

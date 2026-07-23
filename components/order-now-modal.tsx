@@ -75,34 +75,57 @@ export function OrderNowModal({ product, selectedSize, selectedColor, onClose }:
       ? `${address.trim()}\n[${noteparts.join(', ')}]`
       : address.trim()
 
-    const { data: order, error: orderErr } = await supabase
-      .from('orders')
-      .insert({
-        user_id: user?.id ?? null,
-        total: finalTotal,
-        delivery_zone: deliveryZone === 'inside' ? 'Inside Dhaka' : 'Outside Dhaka',
-        delivery_charge: deliveryCharge,
-        address: addressWithNote,
-        phone: phone.trim(),
-        status: 'pending',
-        is_guest: !user,
-        guest_name: user ? null : name.trim(),
-      })
-      .select()
-      .single()
+let orderId: number
 
-    if (orderErr) {
-      setError(orderErr.message)
-      setLoading(false)
-      return
-    }
-
-    await supabase.from('order_items').insert({
-      order_id: order.id,
-      product_id: product.id,
-      quantity,
-      price: product.price,
+if (user) {
+  // Logged-in path — unchanged, RLS already allows this
+  const { data: order, error: orderErr } = await supabase
+    .from('orders')
+    .insert({
+      user_id: user.id,
+      total: finalTotal,
+      delivery_zone: deliveryZone === 'inside' ? 'Inside Dhaka' : 'Outside Dhaka',
+      delivery_charge: deliveryCharge,
+      address: addressWithNote,
+      phone: phone.trim(),
+      status: 'pending',
+      is_guest: false,
+      guest_name: null,
     })
+    .select()
+    .single()
+
+  if (orderErr) {
+    setError(orderErr.message)
+    setLoading(false)
+    return
+  }
+  orderId = order.id
+} else {
+  // Guest path — goes through the RPC function instead
+  const { data: newOrderId, error: rpcErr } = await supabase.rpc('create_guest_order', {
+    p_total: finalTotal,
+    p_zone: deliveryZone === 'inside' ? 'Inside Dhaka' : 'Outside Dhaka',
+    p_charge: deliveryCharge,
+    p_address: addressWithNote,
+    p_phone: phone.trim(),
+    p_guest_name: name.trim(),
+  })
+
+  if (rpcErr) {
+    setError(rpcErr.message)
+    setLoading(false)
+    return
+  }
+  orderId = newOrderId
+}
+
+await supabase.from('order_items').insert({
+  order_id: orderId,
+  product_id: product.id,
+  quantity,
+  price: product.price,
+})
 
     router.push('/order-success')
   }

@@ -13,10 +13,10 @@ export default async function AdminReviewsPage() {
   const { data: profile } = await sb.from('profiles').select('is_admin').eq('id', user.id).single()
   if (!profile?.is_admin) redirect('/')
 
-  const { data: reviews } = await supabase
-    .from('reviews')
-    .select('*, profiles(full_name), products(name)')
-    .order('created_at', { ascending: false })
+const { data: reviews } = await sb
+  .from('reviews')
+  .select('*, profiles(full_name), products(name)')
+  .order('created_at', { ascending: false })
 
   return (
     <div className="min-h-screen bg-[#FAF5EF] p-6">
